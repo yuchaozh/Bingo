@@ -14,6 +14,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -57,6 +58,7 @@ import com.sun.bingo.util.theme.ColorChooserDialog;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+// bmob 服务和parse类似
 import cn.bmob.v3.BmobUser;
 
 
@@ -83,6 +85,7 @@ public class MainActivity extends BaseActivity implements ColorChooserDialog.Cal
 
     private boolean isShareUrl = true;
     private IWeiboShareAPI mWeiboShareAPI; // 新浪微博分享接口实例
+    private static String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,6 +188,7 @@ public class MainActivity extends BaseActivity implements ColorChooserDialog.Cal
     private void checkBmobUser() {
         myEntity = BmobUser.getCurrentUser(this, UserEntity.class);
         if (myEntity == null) {
+            Log.d(TAG, "there is no user info, go to login view");
             NavigateManager.gotoLoginActivity(this);
             finish();
         }
@@ -234,6 +238,7 @@ public class MainActivity extends BaseActivity implements ColorChooserDialog.Cal
 
     private void initView() {
         initToolBar(toolbar, false, R.string.app_name);
+        // Drawer Navigation
         ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(this, mainDrawerLayout, toolbar, 0, 0);
         drawerToggle.syncState();
         controlShowFragment(0);
@@ -385,19 +390,23 @@ public class MainActivity extends BaseActivity implements ColorChooserDialog.Cal
         recreate();
     }
 
+    // menu on toolbar
+    // 关于软件
+    // 关于作者
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
+    // action event on menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.item_menu_app:
+            case R.id.item_menu_app:  // click event on about app
                 NavigateManager.gotoAboutAppActivity(this);
                 return true;
-            case R.id.item_menu_author:
+            case R.id.item_menu_author:  // click event on about author
                 NavigateManager.gotoAboutAuthorActivity(this);
                 return true;
             default:

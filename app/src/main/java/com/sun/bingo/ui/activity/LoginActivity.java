@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -57,9 +58,12 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
     private SsoHandler mSsoHandler;
     private Oauth2AccessToken mAccessToken;
     private LoadingDialog mLoadingDialog;
+    private static String TAG = "LoginActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
@@ -75,6 +79,8 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
         mLoadingDialog = new LoadingDialog(this);
     }
 
+    // add "Login" to app bar
+    // 在低版本的SDK里使用高版本函数,使用@SupperssLint("NewApi")会使得编译通过,和@Target()类似
     @SuppressLint("NewApi")
     private void initView() {
         initToolBar(toolbar, false, "登录");
@@ -84,6 +90,7 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
         llRootView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                Log.d(TAG, "llRootView onTouch, hide keyboard");
                 KeyBoardUtil.hideKeyboard(LoginActivity.this);
                 return false;
             }
@@ -94,6 +101,7 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            // onClick event on login sina text view
             case R.id.tv_login_sina:
                 mSsoHandler.authorize(new AuthListener());
                 break;
@@ -101,6 +109,7 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
     }
 
     class AuthListener implements WeiboAuthListener {
+        // login successful
         @Override
         public void onComplete(Bundle values) {
             mAccessToken = Oauth2AccessToken.parseAccessToken(values);
@@ -109,17 +118,20 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
                 getAccountSharedPreferences().access_token(mAccessToken.getToken());
                 getAccountSharedPreferences().refresh_token(mAccessToken.getRefreshToken());
                 getAccountSharedPreferences().expires_in(mAccessToken.getExpiresTime());
+                // 登入成功后跳转
                 loginSuccess();
             } else {
                 ToastTip.show(values.getString("code", ""));
             }
         }
 
+        // login cancel
         @Override
         public void onCancel() {
             ToastTip.show("暂时只支持微博账号登录哦");
         }
 
+        // login fail
         @Override
         public void onWeiboException(WeiboException e) {
             ToastTip.show("微博授权异常");
@@ -128,6 +140,7 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
 
     // 新浪账号登录成功后跳转
     private void loginSuccess() {
+        // Best practise, check dialog is null or not at first
         if (mLoadingDialog != null) {
             mLoadingDialog.showCancelDialog("正在登录，请稍候....");
         }
@@ -153,6 +166,7 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
         params.put("access_token", getAccountSharedPreferences().access_token());
         params.put("uid", getAccountSharedPreferences().uid());
 
+        // call get user info api
         RequestCall build = OkHttpProxy.get().url(UrlManager.URL_SINA_USER_INFO).params(params).build();
         build.execute(new JsonCallBack<SinaUserInfoEntity>() {
             @Override
@@ -204,11 +218,14 @@ public class LoginActivity extends BaseActivity<SingleControl> implements View.O
     }
 
     // 跳转到主界面或用户信息界面
+    // if missing some user information, go to profile view first, else go to main view
     private void gotoMainOrProfile() {
         mLoadingDialog.dismiss();
         if (TextUtils.isEmpty(myEntity.getNickName()) || TextUtils.isEmpty(myEntity.getUserAvatar())) {
+            Log.d(TAG, "missing user info, go to profile view");
             NavigateManager.gotoProfileActivity(LoginActivity.this, true);
         } else {
+            Log.d(TAG, "go to main view");
             NavigateManager.gotoMainActivity(LoginActivity.this);
         }
         finish();

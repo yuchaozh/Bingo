@@ -13,6 +13,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
+ * 关于软件 view
  * Created by sunfusheng on 15/9/8.
  */
 public class AboutAppActivity extends BaseActivity {
@@ -38,8 +39,11 @@ public class AboutAppActivity extends BaseActivity {
 
     private void initView() {
         initToolBar(toolbar, true, "");
+        // 隐藏toolbar之后,显示"关于软件"作为toolbar的title
         collapsingToolbar.setTitle(getString(R.string.about_app));
+        // show web view, the local web page locates in assets folder
         webView.loadUrl("file:///android_asset/about_app.html");
+        // show versionName, no versionCode
         tvVersion.setText("Version " + AppUtil.getVersionName(this));
     }
 
